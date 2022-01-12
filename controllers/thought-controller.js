@@ -1,4 +1,4 @@
-const { Thought, User } = require("../models");
+const { Thought, User, Reaction } = require("../models");
 
 const thoughtController = {
   async addThought({ params, body }, res) {
@@ -6,20 +6,21 @@ const thoughtController = {
       console.log(params);
       // find the user who created the thought
       const user = await User.findOne({
-        _id: params.userId,
+        _id: body.userId,
       });
       if (!user) {
         res.status(404).json({ message: "user not found" });
         return;
       }
       // create the thought
-      const thought = await Thought.create(body).select("-__v");
+      const thought = await Thought.create(body);
       console.log(thought);
       // update the user with the thought id
-      await user.update({ $push: { thoughts: thought._id } });
+      await user.updateOne({ $push: { thoughts: thought._id } });
 
       res.json(thought);
     } catch (err) {
+      console.log(err);
       res.status(500).json(err);
     }
   },
@@ -46,17 +47,20 @@ const thoughtController = {
   // add reply to comment
   async addReaction({ params, body }, res) {
     try {
-      const user = await User.findOneAndUpdate(
-        { _id: params.userId },
-        { $push: { friends: params.friendId } },
+      const reaction = await Reaction.create(body);
+      console.log(reaction);
+      const thought = await Thought.findOneAndUpdate(
+        { _id: params.thoughtId },
+        { $push: { reactions: reaction } },
         { new: true, runValidators: true }
       ).select("-__v");
-      if (!user) {
-        res.status(404).json({ message: "No user found" });
+      if (!thought) {
+        res.status(404).json({ message: "No thought found" });
         return;
       }
-      res.json(user);
+      res.json(thought);
     } catch (err) {
+      console.log(err);
       res.status(500).json(err);
     }
   },
