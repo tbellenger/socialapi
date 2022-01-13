@@ -38,13 +38,46 @@ const thoughtController = {
   async getThoughtById({ params }, res) {
     try {
       const thought = await Thought.findOne({ _id: params.id }).select("-__v");
-      res.json(thought);
+      if (thought) {
+        res.json(thought);
+      } else {
+        res.status(404).json({ message: "Thought not found" });
+      }
     } catch (err) {
       res.status(400).json(err);
     }
   },
 
-  // add reply to comment
+  async updateThought({ params }, res) {
+    try {
+      const thought = await Thought.findOneAndUpdate({ _id: params.id }, body, {
+        new: true,
+        runValidators: true,
+      }).select("-__v");
+      if (thought) {
+        res.json(thought);
+      } else {
+        res.status(404).json({ message: "Thought not found" });
+      }
+    } catch (err) {
+      res.status(400).json(err);
+    }
+  },
+
+  async deleteThought({ params }, res) {
+    try {
+      const thought = await Thought.findOneAndDelete({ _id: params.id });
+      if (thought) {
+        res.json(thought);
+      } else {
+        res.status(404).json({ message: "Thought not found" });
+      }
+    } catch (err) {
+      res.status(400).json(err);
+    }
+  },
+
+  // add reaction to thought
   async addReaction({ params, body }, res) {
     try {
       const reaction = await Reaction.create(body);
@@ -53,6 +86,26 @@ const thoughtController = {
         { _id: params.thoughtId },
         { $push: { reactions: reaction } },
         { new: true, runValidators: true }
+      ).select("-__v");
+      if (!thought) {
+        res.status(404).json({ message: "No thought found" });
+        return;
+      }
+      res.json(thought);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
+
+  async deleteReaction({ params, body }, res) {
+    try {
+      const reaction = await Reaction.findOne({ _id: params.reactionId });
+      console.log(reaction);
+      const thought = await Thought.findOneAndUpdate(
+        { _id: params.thoughtId },
+        { $pop: { reactions: reaction } },
+        { new: true }
       ).select("-__v");
       if (!thought) {
         res.status(404).json({ message: "No thought found" });
