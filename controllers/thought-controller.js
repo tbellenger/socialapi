@@ -48,7 +48,7 @@ const thoughtController = {
     }
   },
 
-  async updateThought({ params }, res) {
+  async updateThought({ params, body }, res) {
     try {
       const thought = await Thought.findOneAndUpdate({ _id: params.id }, body, {
         new: true,
