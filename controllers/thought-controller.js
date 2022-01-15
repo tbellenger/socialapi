@@ -80,11 +80,9 @@ const thoughtController = {
   // add reaction to thought
   async addReaction({ params, body }, res) {
     try {
-      const reaction = await Reaction.create(body);
-      console.log(reaction);
       const thought = await Thought.findOneAndUpdate(
         { _id: params.thoughtId },
-        { $push: { reactions: reaction } },
+        { $push: { reactions: body } },
         { new: true, runValidators: true }
       ).select("-__v");
       if (!thought) {
@@ -100,11 +98,9 @@ const thoughtController = {
 
   async deleteReaction({ params, body }, res) {
     try {
-      const reaction = await Reaction.findOne({ _id: params.reactionId });
-      console.log(reaction);
       const thought = await Thought.findOneAndUpdate(
         { _id: params.thoughtId },
-        { $pop: { reactions: reaction } },
+        { $pull: { reactions: { reactionId: params.reactionId } } },
         { new: true }
       ).select("-__v");
       if (!thought) {

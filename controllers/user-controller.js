@@ -72,8 +72,7 @@ const userController = {
       );
       if (user) {
         const thoughts = await Thought.deleteMany({ username: user.username });
-        user.deletedThoughts = thoughts.deletedCount;
-        res.json(user);
+        res.json({ user, deletedThoughts: thoughts.deletedCount });
       } else {
         res.status(404).json({ message: "User not found" });
       }
@@ -105,7 +104,7 @@ const userController = {
     try {
       const user = await User.findOneAndUpdate(
         { _id: params.userId },
-        { $pop: { friends: params.friendId } },
+        { $pull: { friends: params.friendId } },
         { new: true }
       ).select("-__v");
       if (!user) {
